@@ -1,0 +1,211 @@
+local old;
+old = hookfunction(rconsoleprint, function(...)
+    return  
+end)
+
+local old;
+old = hookfunction(rconsolewarn, function(...)
+    return  
+end)
+
+local old;
+old = hookfunction(printconsole, function(...)
+    return  
+end)
+
+local old;
+old = hookfunction(rconsoleerr, function(...)
+    return  
+end)
+
+local old
+
+old = hookfunction(getrenv().print, function(...)
+    if checkcaller() then
+        return
+    end
+    return old(...)
+end)
+
+wait(1)
+
+Keybinds = {
+    ["Increase"] = "J",
+    ["Decrease"] = "K",
+    ["Autoclicker"] = "Q",
+    ["Visibility"] = "N",
+    ["Toggle"] = 'Z'
+}
+
+Settings = {
+    ["Size"] = 3,
+    ["Invisible"] = false,
+    ["uBubble"] = true,
+    ["Toggle"] = true,
+    ["Autoclicker"] = true
+}
+
+Limbs = {
+    ["Head"] = true,
+    ["HumanoidRootPart"] = true,
+    ["Torso"] = true,
+    ["Right Arm"] = true,
+    ["Left Arm"] = true,
+    ["Right Leg"] = true,
+    ["Left Leg"] = true
+}
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Blissful4992/ESPs/main/3D%20Drawing%20Api.lua"))()
+
+local Cube = Library:New3DCube()
+Cube.Visible = true
+Cube.ZIndex = 1
+Cube.Transparency = 0.3
+Cube.Color = Color3.fromRGB(255, 0, 0)
+Cube.Thickness = 1
+Cube.Filled = true
+
+local function fire(Handle, Part)
+    if Settings.uBubble then 
+        for i,v in pairs(Part.Parent:GetChildren()) do
+            if v:IsA("Part") and v.CanTouch == true and v.Parent:FindFirstChild("Torso").Transparency == 0 and v.Name == "Part" and v.Parent:FindFirstChild("Humanoid").MaxHealth < 250 and v.Parent:FindFirstChild("Humanoid").Health > 0 and (v.Position - Handle.Position).Magnitude < Settings.Size + 4.5 then
+                firetouchinterest(Handle, v, 1)
+                firetouchinterest(Handle, v, 0)
+            end
+        end
+    else
+        for i,v in pairs(Part.Parent:GetChildren()) do
+            if v:IsA("Part") and v.CanTouch == true and v.Parent:FindFirstChild("Torso").Transparency == 0 and Limbs[v.Name] and v.Parent:FindFirstChild("Humanoid").MaxHealth < 250 and v.Parent:FindFirstChild("Humanoid").Health > 0 and (v.Position - Handle.Position).Magnitude < Settings.Size + 4.5 and (v:GetConnectedParts()[1] == v.Parent:FindFirstChild("Torso") or v:GetConnectedParts()[2] == v.Parent:FindFirstChild("Torso") or v:GetConnectedParts()[3] == v.Parent:FindFirstChild("Torso")) then
+                firetouchinterest(Handle, v, 1)
+                firetouchinterest(Handle, v, 0)
+            end
+        end
+    end
+end
+
+local function fireFake(Handle, Part)
+    if Settings.uBubble then 
+        for a,b in pairs(Handle:GetTouchingParts()) do 
+            if b.Position == Handle.Position or b.Transparency >= 0.5 and b:FindFirstChildOfClass("TouchInterest") ~= nil then
+                for i,v in pairs(Part.Parent:GetChildren()) do
+                    if v:IsA("Part") and v.CanTouch == true and v:FindFirstChild("Torso").Transparency == 0 and v.Name == "Part" and v.Parent:FindFirstChild("Humanoid").MaxHealth < 250 and v.Parent:FindFirstChild("Humanoid").Health > 0 and (v.Position - Handle.Position).Magnitude < Settings.Size + 4.5 then
+                        firetouchinterest(b, v, 1)
+                        firetouchinterest(b, v, 0)
+                    end
+                end
+            end
+        end
+    else
+        for a,b in pairs(Handle:GetTouchingParts()) do 
+            if b.Position == Handle.Position or b.Transparency >= 0.5 and b:FindFirstChildOfClass("TouchInterest") ~= nil then
+                for i,v in pairs(Part.Parent:GetChildren()) do
+                    if v:IsA("Part") and v.CanTouch == true and v.Transparency == 0 and Limbs[v.Name] and v.Parent:FindFirstChild("Humanoid").MaxHealth < 250 and v.Parent:FindFirstChild("Humanoid").Health > 0 and (v.Position - Handle.Position).Magnitude < Settings.Size + 4.5 and (v:GetConnectedParts()[1] == v.Parent:FindFirstChild("Torso") or v:GetConnectedParts()[2] == v.Parent:FindFirstChild("Torso") or v:GetConnectedParts()[3] == v.Parent:FindFirstChild("Torso")) then
+                        firetouchinterest(b, v, 1)
+                        firetouchinterest(b, v, 0)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function trueSize(size)
+    return size/2
+end
+
+local spoofedConnection
+
+local function spoofTouch(Handle)
+
+    local conn = getconnections(Handle.Touched)[1]
+    conn:Disable()
+
+    local oldConnection = conn.Function
+    
+    Handle.Touched:Connect(function(hit)
+        if Limbs[hit.Name] then
+            if hit:GetConnectedParts()[1] == hit.Parent:FindFirstChild("Torso") or hit:GetConnectedParts()[2] == hit.Parent:FindFirstChild("Torso") or hit:GetConnectedParts()[3] == hit.Parent:FindFirstChild("Torso") then
+                return
+            else
+                oldConnection(hit)
+            end
+        end
+        oldConnection(hit)
+    end)
+
+    spoofedConnection = getconnections(Handle.Touched)[1].Function 
+end
+
+game:GetService("Players").LocalPlayer:GetMouse().KeyDown:Connect(function(Key)
+	if Key == Keybinds.Toggle:lower() then
+		Settings.Toggle = not Settings.Toggle
+	elseif Key == Keybinds.Increase:lower() then
+		Settings.Size = Settings.Size + 0.5
+	elseif Key == Keybinds.Decrease:lower() then
+		Settings.Size = Settings.Size - 0.5
+	elseif Key == Keybinds.Autoclicker:lower() then
+		-- if Settings.Autoclicker then
+		-- 	Settings.Autoclicker = false
+		-- else
+		-- 	Settings.Autoclicker = true
+		-- end
+		-- while Settings.Autoclicker do
+		-- 	pcall(function()
+		-- 		wait()
+		-- 		local Sword = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool")
+		-- 		Sword:Activate()
+		-- 	end)
+		-- end
+	elseif Key == Keybinds.Visibility:lower() then
+		if Settings.Invisible then
+			Cube.Transparency = 0.3
+			Settings.Invisible = false
+		else
+			Cube.Transparency = 0
+			Settings.Invisible = true
+		end
+	end
+end)
+
+local min
+local max
+local region
+local getTouchingParts
+local currentConnection
+
+while true do
+    pcall(function()
+        task.wait()
+        if Settings.Toggle then
+            local Tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Tool')
+            if Tool and Tool:FindFirstChild('Handle') then
+
+                coroutine.wrap(function()
+                    min = Tool.Handle.Position - (Vector3.new(trueSize(Settings.Size), trueSize(Settings.Size), trueSize(Settings.Size)))
+                    max = Tool.Handle.Position + (Vector3.new(trueSize(Settings.Size), trueSize(Settings.Size), trueSize(Settings.Size)))
+                    region = Region3.new(min,max)
+                    getTouchingParts = workspace:FindPartsInRegion3(region, game:GetService("Players").LocalPlayer.Character, math.huge)
+
+                    Cube.Size = Vector3.new(trueSize(Settings.Size), trueSize(Settings.Size), trueSize(Settings.Size))
+                    Cube.Position = Tool.Handle.Position
+                    Cube.Rotation = Tool.Handle.Rotation
+                end)()
+
+                if getconnections(Tool.Handle.Touched)[1] ~= nil then
+                    currentConnection = getconnections(Tool.Handle.Touched)[1].Function 
+                end
+
+                if currentConnection ~= spoofedConnection and getconnections(Tool.Handle.Touched)[1] ~= nil then
+                    spoofTouch(Tool.Handle)
+                end
+                
+                for i,v in pairs(getTouchingParts) do 
+                    if v.Parent:FindFirstChild("Humanoid") then
+                        fire(Tool.Handle, v)
+                        fireFake(Tool.Handle, v)
+                    end
+                end
+            end
+        end
+    end)
+end
